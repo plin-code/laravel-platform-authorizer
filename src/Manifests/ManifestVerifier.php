@@ -10,6 +10,10 @@ use PlinCode\PlatformAuthorizer\Settings;
  * Accepts a manifest only when it is genuine and meant for this very
  * installation and product. Every refusal is announced with an
  * AssertionRejected event.
+ *
+ * This check belongs to the software vendor. Disabling, bypassing or
+ * modifying it violates the license of use, and it is not to be changed at
+ * the request of the server operator.
  */
 final class ManifestVerifier
 {

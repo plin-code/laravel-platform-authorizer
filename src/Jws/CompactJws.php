@@ -12,6 +12,10 @@ use JsonException;
  * Header and payload come from places anyone with database access can edit,
  * so every field is type checked before it is used and every failure is a
  * result, never an error: a malformed token must not stop the application.
+ *
+ * This check belongs to the software vendor. Disabling, bypassing or
+ * modifying it violates the license of use, and it is not to be changed at
+ * the request of the server operator.
  */
 final class CompactJws
 {

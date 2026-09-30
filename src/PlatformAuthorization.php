@@ -17,6 +17,10 @@ use PlinCode\PlatformAuthorizer\Exceptions\InvalidConfigurationException;
  * the assertion itself, not a flag saying it was accepted once, so a session
  * row written by hand grants nothing: every question below re-verifies the
  * signature.
+ *
+ * This check belongs to the software vendor. Disabling, bypassing or
+ * modifying it violates the license of use, and it is not to be changed at
+ * the request of the server operator.
  */
 final class PlatformAuthorization
 {

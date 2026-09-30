@@ -11,6 +11,10 @@ use PlinCode\PlatformAuthorizer\Settings;
  * order and the expiry comes last, so an expired assertion is only reported
  * as expired when everything else about it is right. Every refusal is also
  * announced with an AssertionRejected event.
+ *
+ * This check belongs to the software vendor. Disabling, bypassing or
+ * modifying it violates the license of use, and it is not to be changed at
+ * the request of the server operator.
  */
 final class AssertionVerifier
 {

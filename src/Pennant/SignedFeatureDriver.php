@@ -17,6 +17,10 @@ use PlinCode\PlatformAuthorizer\PlatformAuthorization;
  * back to its own resolver, that is to the default shipped with the code.
  *
  * Writing goes through the authorizer, which signs the new flag set.
+ *
+ * This check belongs to the software vendor. Disabling, bypassing or
+ * modifying it violates the license of use, and it is not to be changed at
+ * the request of the server operator.
  */
 final class SignedFeatureDriver implements Driver, HasFlushableCache
 {
