@@ -2,10 +2,14 @@
 
 namespace PlinCode\PlatformAuthorizer;
 
+use Livewire\Component;
 use Livewire\Livewire;
 use PlinCode\PlatformAuthorizer\Http\Middleware\RequirePlatformAuthorization;
+use PlinCode\PlatformAuthorizer\Http\ProtectedComponentGuard;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
+
+use function Livewire\on;
 
 class PlatformAuthorizerServiceProvider extends PackageServiceProvider
 {
@@ -26,6 +30,7 @@ class PlatformAuthorizerServiceProvider extends PackageServiceProvider
         // that use it, so a page already open is checked again on every call.
         if (class_exists(Livewire::class)) {
             Livewire::addPersistentMiddleware([RequirePlatformAuthorization::class]);
+            on('hydrate', fn (Component $component) => ProtectedComponentGuard::check($component));
         }
     }
 

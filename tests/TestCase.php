@@ -9,6 +9,7 @@ use Livewire\LivewireServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
 use PlinCode\PlatformAuthorizer\Http\Middleware\RequirePlatformAuthorization;
 use PlinCode\PlatformAuthorizer\PlatformAuthorizerServiceProvider;
+use PlinCode\PlatformAuthorizer\Tests\Elsewhere\OtherPanel;
 use PlinCode\PlatformAuthorizer\Tests\Fixtures\ProbePanel;
 
 class TestCase extends Orchestra
@@ -18,6 +19,7 @@ class TestCase extends Orchestra
         parent::setUp();
 
         Livewire::component('probe-panel', ProbePanel::class);
+        Livewire::component('other-panel', OtherPanel::class);
     }
 
     protected function getPackageProviders($app): array
