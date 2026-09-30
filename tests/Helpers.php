@@ -6,13 +6,14 @@ use PlinCode\PlatformAuthorizer\Testing\Signer;
 const TEST_NONCE = 'aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899';
 
 /**
- * Settings that trust the given signer's public key.
+ * A configuration that trusts the given signer's public key.
  *
  * @param  array<string, mixed>  $overrides
+ * @return array<string, mixed>
  */
-function settingsFor(Signer $signer, array $overrides = []): Settings
+function configFor(Signer $signer, array $overrides = []): array
 {
-    return Settings::fromConfig([
+    return [
         'url' => 'https://auth.example.test',
         'product' => 'mizuno-run-club',
         'installation' => 'mizuno-acme',
@@ -25,8 +26,20 @@ function settingsFor(Signer $signer, array $overrides = []): Settings
         'guard' => null,
         'home' => '/',
         'denied_url' => '/',
+        'route_prefix' => 'platform-authorizer',
+        'middleware' => ['web', 'auth'],
         ...$overrides,
-    ]);
+    ];
+}
+
+/**
+ * Settings that trust the given signer's public key.
+ *
+ * @param  array<string, mixed>  $overrides
+ */
+function settingsFor(Signer $signer, array $overrides = []): Settings
+{
+    return Settings::fromConfig(configFor($signer, $overrides));
 }
 
 /**

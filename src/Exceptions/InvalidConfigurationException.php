@@ -10,8 +10,13 @@ use RuntimeException;
  */
 class InvalidConfigurationException extends RuntimeException
 {
+    public function __construct(string $message, public readonly string $setting = '')
+    {
+        parent::__construct($message);
+    }
+
     public static function for(string $setting, string $reason): self
     {
-        return new self("Invalid platform-authorizer setting [{$setting}]: {$reason}.");
+        return new self("Invalid platform-authorizer setting [{$setting}]: {$reason}.", $setting);
     }
 }
