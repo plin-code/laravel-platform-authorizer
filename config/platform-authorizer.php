@@ -37,8 +37,9 @@ return [
 
     /*
     | Status answered to a request whose authorization has expired: 419 makes
-    | Livewire reload the page, which goes through the authorizer again, and
-    | 403 makes it show an error modal instead. Only these two are accepted.
+    | Livewire offer to reload the page, which goes through the authorizer
+    | again, and 403 makes it show an error modal instead. Only these two are
+    | accepted.
     */
     'expired_status' => 419,
 

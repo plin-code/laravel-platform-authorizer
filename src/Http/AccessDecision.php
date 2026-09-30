@@ -13,6 +13,6 @@ enum AccessDecision
     /** Refuse with a 403. */
     case Forbidden;
 
-    /** Refuse with a 419, which makes Livewire reload the page. */
+    /** Refuse with the configured `expired_status`, 419 or 403. */
     case Expired;
 }

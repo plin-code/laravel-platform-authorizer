@@ -13,8 +13,9 @@ use PlinCode\PlatformAuthorizer\PlatformAuthorization;
  *
  * A browser navigation can be sent through the authorizer to get a fresh
  * assertion. A Livewire request cannot: the answer would be followed by
- * fetch across domains, so it is refused instead, with a 419 when the only
- * fault is an expired assertion and a 403 otherwise.
+ * fetch across domains, so it is refused instead, with the configured
+ * `expired_status` (419 or 403) when the only fault is an expired assertion
+ * and a 403 otherwise.
  */
 final class AccessDecider
 {
