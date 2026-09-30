@@ -2,10 +2,12 @@
 
 namespace PlinCode\PlatformAuthorizer;
 
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Foundation\Application;
 use Laravel\Pennant\FeatureManager;
 use Livewire\Component;
 use Livewire\Livewire;
+use PlinCode\PlatformAuthorizer\Commands\SyncFlagsCommand;
 use PlinCode\PlatformAuthorizer\Http\Middleware\RequirePlatformAuthorization;
 use PlinCode\PlatformAuthorizer\Http\ProtectedComponentGuard;
 use PlinCode\PlatformAuthorizer\Manifests\ManifestCache;
@@ -25,11 +27,18 @@ class PlatformAuthorizerServiceProvider extends PackageServiceProvider
             ->hasViews()
             ->hasTranslations()
             ->hasRoute('web')
+            ->hasCommand(SyncFlagsCommand::class)
             ->hasMigration('create_feature_manifests_table');
     }
 
     public function packageBooted(): void
     {
+        // A flag changed on the authorizer reaches the installation within
+        // the hour, and a rolled back manifest is caught by the same run.
+        $this->callAfterResolving(Schedule::class, function (Schedule $schedule): void {
+            $schedule->command(SyncFlagsCommand::class)->hourly()->withoutOverlapping();
+        });
+
         // The driver exists only where Pennant is installed. Registering it
         // here, before the application defines its features, makes it
         // available under the name the Pennant configuration uses.
