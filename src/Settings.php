@@ -121,8 +121,8 @@ final readonly class Settings
     }
 
     /**
-     * 419 makes Livewire reload the page, 403 shows its error modal. Nothing
-     * else is a meaningful answer to an expired authorization.
+     * 419 makes Livewire offer to reload the page, 403 shows its error modal.
+     * Nothing else is a meaningful answer to an expired authorization.
      */
     private static function expiredStatus(mixed $value): int
     {

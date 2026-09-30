@@ -81,7 +81,7 @@ A Livewire request cannot follow a redirect to another domain, so the middleware
 * no assertion, or an assertion that is not valid: 403;
 * an expired assertion: served for `livewire_grace_seconds` after the expiry, then the status of `expired_status`, 419 by default.
 
-The two values of `expired_status` differ in what Livewire does with them. A 419 makes Livewire ask the user with its native confirm dialog ("This page has expired, refresh?") and reload the page only if the user accepts. The dialog appears once per page load, and the reload goes through the authorizer again. A 403 makes Livewire show its error modal with the error page inside, and the only way out is to close it and reload the page by hand. Keep 419 unless the modal is what you want. Any other value is refused when the configuration is validated.
+The two values of `expired_status` differ in what Livewire does with them. A 419 makes Livewire ask the user with its native confirm dialog (a notice that the page has expired) and reload the page only if the user accepts. The dialog appears once per page load, and the reload goes through the authorizer again. A 403 makes Livewire show its error modal with the error page inside, and the only way out is to close it and reload the page by hand. Keep 419 unless the modal is what you want. Any other value is refused when the configuration is validated.
 
 The grace applies only to the real Livewire update endpoint. A plain request that carries the `X-Livewire` header gets none.
 
