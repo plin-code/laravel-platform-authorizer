@@ -146,6 +146,49 @@ it('never raises when an event cannot be delivered', function (Closure $fake) {
     'connection failure' => [fn () => Http::fake(['*' => fn () => throw new ConnectionException('timed out')])],
 ]);
 
+/**
+ * Fakes an authorizer that answers every call with a redirect to another
+ * host, and that other host as a place that would accept anything.
+ */
+function fakeRedirectToAnotherHost(int $status = 302): void
+{
+    Http::fake([
+        'auth.example.test/*' => Http::response('', $status, ['Location' => 'https://elsewhere.example.test/collect']),
+        'elsewhere.example.test/*' => Http::response(['manifest' => 'a.b.c'], 200),
+    ]);
+}
+
+function assertNothingWentElsewhere(): void
+{
+    Http::assertSentCount(1);
+    Http::assertNotSent(fn (Request $request): bool => $request->toPsrRequest()->getUri()->getHost() === 'elsewhere.example.test');
+}
+
+it('never follows a redirect to another host with the bearer', function (int $status) {
+    fakeRedirectToAnotherHost($status);
+
+    expect(fn () => $this->client->writeFlags('the-assertion', ['check-in' => true]))
+        ->toThrow(AuthorizerUnavailableException::class);
+
+    assertNothingWentElsewhere();
+})->with([301, 302, 303, 307, 308]);
+
+it('does not follow a redirect when it reads the manifest', function () {
+    fakeRedirectToAnotherHost();
+
+    expect(fn () => $this->client->fetchManifest())->toThrow(AuthorizerUnavailableException::class);
+
+    assertNothingWentElsewhere();
+});
+
+it('does not follow a redirect when it reports a tamper event, and never raises', function () {
+    fakeRedirectToAnotherHost();
+
+    expect($this->client->reportTamper('x'))->toBeFalse();
+
+    assertNothingWentElsewhere();
+});
+
 it('keeps the assertion, the nonce and the email out of the logs', function () {
     Http::fake(['*' => Http::response(['error' => 'expired'], 401)]);
 

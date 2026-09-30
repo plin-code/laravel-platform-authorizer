@@ -16,8 +16,9 @@ use PlinCode\PlatformAuthorizer\Settings;
 /**
  * Talks to the vendor's authorizer. Every call has a short timeout and none
  * is retried, so a slow or absent authorizer means access denied, never a
- * hanging request. Log context holds an endpoint name and a status code and
- * nothing else: no assertion, nonce, email or response body.
+ * hanging request. None follows a redirect, so the assertion sent as bearer
+ * never leaves the configured host. Log context holds an endpoint name and a
+ * status code and nothing else: no assertion, nonce, email or response body.
  */
 final class AuthorizerClient
 {
@@ -135,6 +136,8 @@ final class AuthorizerClient
         $request = Http::baseUrl($this->settings->url)
             ->timeout($this->settings->timeout)
             ->connectTimeout($this->settings->timeout)
+            // A redirect would carry the bearer to whatever host it names.
+            ->withoutRedirecting()
             ->acceptJson();
 
         try {
@@ -145,7 +148,7 @@ final class AuthorizerClient
             throw new AuthorizerUnavailableException;
         }
 
-        if ($response->status() === 429 || $response->serverError() || $response->status() === 400) {
+        if ($response->status() === 429 || $response->status() === 400 || $response->serverError() || $response->redirect()) {
             Log::warning('Platform authorizer unavailable', ['endpoint' => $endpoint, 'status' => $response->status()]);
 
             throw new AuthorizerUnavailableException;
