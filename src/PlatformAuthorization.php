@@ -106,10 +106,18 @@ final class PlatformAuthorization
         return is_string($nonce) && $nonce !== '' ? $nonce : null;
     }
 
+    /**
+     * The validated configuration.
+     */
+    public function settings(): Settings
+    {
+        return $this->container->make(Settings::class);
+    }
+
     private function verify(string $token, ?string $nonce, ?Authenticatable $user): Verification
     {
         try {
-            $settings = $this->container->make(Settings::class);
+            $settings = $this->settings();
             $user ??= Auth::guard($settings->guard)->user();
 
             return (new AssertionVerifier($settings))->verify($token, self::emailOf($user), $nonce);

@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static bool isGranted()
  * @method static \PlinCode\PlatformAuthorizer\Assertions\Verification|null check(?\Illuminate\Contracts\Auth\Authenticatable $user = null)
  * @method static \PlinCode\PlatformAuthorizer\Assertions\Verification accept(string $token, string $nonce)
+ * @method static \PlinCode\PlatformAuthorizer\Settings settings()
  * @method static void grant(string $assertion)
  * @method static void forget()
  * @method static string issueNonce()
