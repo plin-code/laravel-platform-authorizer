@@ -2,6 +2,8 @@
 
 namespace PlinCode\PlatformAuthorizer;
 
+use Livewire\Livewire;
+use PlinCode\PlatformAuthorizer\Http\Middleware\RequirePlatformAuthorization;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 
@@ -16,6 +18,15 @@ class PlatformAuthorizerServiceProvider extends PackageServiceProvider
             ->hasTranslations()
             ->hasRoute('web')
             ->hasMigration('create_feature_manifests_table');
+    }
+
+    public function packageBooted(): void
+    {
+        // Livewire replays this middleware on update requests of the routes
+        // that use it, so a page already open is checked again on every call.
+        if (class_exists(Livewire::class)) {
+            Livewire::addPersistentMiddleware([RequirePlatformAuthorization::class]);
+        }
     }
 
     public function packageRegistered(): void
