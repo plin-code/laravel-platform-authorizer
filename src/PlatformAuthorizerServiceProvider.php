@@ -12,6 +12,9 @@ class PlatformAuthorizerServiceProvider extends PackageServiceProvider
         $package
             ->name('laravel-platform-authorizer')
             ->hasConfigFile('platform-authorizer')
+            ->hasViews()
+            ->hasTranslations()
+            ->hasRoute('web')
             ->hasMigration('create_feature_manifests_table');
     }
 

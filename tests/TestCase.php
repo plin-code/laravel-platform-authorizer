@@ -17,9 +17,15 @@ class TestCase extends Orchestra
     protected function defineEnvironment($app): void
     {
         config()->set('database.default', 'testing');
-        // Sessions and encrypted cookies need a key and a driver that works without a browser.
-        config()->set('app.key', 'base64:'.base64_encode(str_repeat('k', 32)));
         config()->set('session.driver', 'array');
+        // The web middleware group encrypts cookies, which needs a key.
+        config()->set('app.key', 'base64:'.base64_encode(str_repeat('k', 32)));
+    }
+
+    protected function defineRoutes($router): void
+    {
+        // The auth middleware sends guests to a route named login.
+        $router->get('/login', fn () => 'login')->name('login');
     }
 
     protected function defineDatabaseMigrations(): void
