@@ -94,6 +94,18 @@ it('answers a Livewire request 419 once the grace is over, so the page reloads',
     livewireUpdate(probeSnapshot(), holding($secondsAgo))->assertStatus(419);
 })->with([[901], [3600]]);
 
+it('answers a Livewire request 403 once the grace is over when the expired status is 403', function () {
+    config()->set('platform-authorizer.expired_status', 403);
+
+    livewireUpdate(probeSnapshot(), holding(901))->assertForbidden();
+});
+
+it('keeps serving a Livewire request inside the grace when the expired status is 403', function () {
+    config()->set('platform-authorizer.expired_status', 403);
+
+    livewireUpdate(probeSnapshot(), holding(600))->assertOk();
+});
+
 it('gives no grace to a navigation, even one that claims to be Livewire', function () {
     $this->actingAs($this->user)
         ->withSession(holding(600))

@@ -108,6 +108,27 @@ it('maps every refusal of a write to an exception with a meaningful status', fun
     'unknown 401 body' => [401, ['error' => 'something'], AuthorizationRejectedException::class, 403],
 ]);
 
+it('answers an expired write with the configured status', function (int $configured) {
+    Http::fake(['*' => Http::response(['error' => 'expired'], 401)]);
+    $client = new AuthorizerClient(settingsFor(new Signer, ['expired_status' => $configured]));
+
+    try {
+        $client->writeFlags('the-assertion', ['check-in' => true]);
+    } catch (AuthorizationExpiredException $exception) {
+        expect($exception->getStatusCode())->toBe($configured);
+
+        return;
+    }
+
+    $this->fail('The write should have been refused.');
+})->with([403, 419]);
+
+it('keeps 419 as the default status of an expired authorization exception', function () {
+    expect((new AuthorizationExpiredException)->getStatusCode())->toBe(419)
+        ->and((new AuthorizationExpiredException(403))->getStatusCode())->toBe(403)
+        ->and((new AuthorizationExpiredException)->getMessage())->toBe('The platform authorization has expired.');
+});
+
 it('fails closed when the authorizer cannot be reached for a write', function () {
     Http::fake(['*' => fn () => throw new ConnectionException('timed out')]);
 

@@ -320,6 +320,23 @@ it('answers 419 when the authorizer says the assertion has expired', function ()
     $this->fail('The write should have been refused.');
 });
 
+it('answers 403 to an expired flag write when the expired status is 403', function () {
+    config()->set('platform-authorizer.expired_status', 403);
+    grantSession();
+    Http::fake(['*' => Http::response(['error' => 'expired'], 401)]);
+
+    try {
+        Feature::for('__global__')->activate('check-in');
+    } catch (AuthorizationExpiredException $exception) {
+        expect($exception->getStatusCode())->toBe(403)
+            ->and($exception->getMessage())->toBe('The platform authorization has expired.');
+
+        return;
+    }
+
+    $this->fail('The write should have been refused.');
+});
+
 it('registers the driver under the name the pennant configuration uses', function () {
     expect(config('pennant.stores.platform-authorizer.driver'))->toBe('platform-authorizer')
         ->and(Feature::store('platform-authorizer')->getDriver())->toBeInstanceOf(SignedFeatureDriver::class);

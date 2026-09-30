@@ -39,6 +39,7 @@ php artisan migrate
 | `keys` | Public keys of the authorizer, `key id => base64 Ed25519 public key`. More than one entry is allowed, see key rotation. |
 | `timeout` | Seconds to wait for the authorizer, 3 by default. Nothing is retried. |
 | `livewire_grace_seconds` | How long after its expiry an assertion still serves Livewire requests already in flight, 900 by default. |
+| `expired_status` | Status answered to a request whose authorization has expired, 419 by default. Only 403 and 419 are accepted, see Livewire. |
 | `protected_livewire_namespaces` | Livewire components under these namespaces refuse to hydrate without a valid authorization. |
 | `except_routes` | Route names the middleware lets through, for instance a logout route. |
 | `global_scope` | The Pennant scope of global flags, `__global__` by default. |
@@ -78,7 +79,9 @@ Gate::define('viewHorizon', fn ($user = null): bool => $user !== null && Platfor
 A Livewire request cannot follow a redirect to another domain, so the middleware answers it differently:
 
 * no assertion, or an assertion that is not valid: 403;
-* an expired assertion: served for `livewire_grace_seconds` after the expiry, then 419. Livewire answers a 419 by reloading the page, and the reload goes through the authorizer again.
+* an expired assertion: served for `livewire_grace_seconds` after the expiry, then the status of `expired_status`, 419 by default.
+
+The two values of `expired_status` differ in what Livewire does with them. A 419 makes Livewire reload the page, and the reload goes through the authorizer again, so the user gets a new authorization without noticing. A 403 makes Livewire show its error modal instead, and the user has to reload by hand. Keep 419 unless the modal is what you want. Any other value is refused when the configuration is validated.
 
 The grace applies only to the real Livewire update endpoint. A plain request that carries the `X-Livewire` header gets none.
 
@@ -98,7 +101,7 @@ Register the driver as the Pennant store, without reading the name from the envi
 ```
 
 * Reading verifies the signature of the stored manifest once per request. A missing table, a missing manifest, a bad signature, another installation or product, a key that is no longer configured or a malformed field all give the default declared by the flag.
-* Writing (`activate`, `deactivate`, `activateForEveryone`, `forget`, `purge`) sends the complete flag set to the authorizer, with the assertion of the session as bearer, and stores the signed manifest it returns. Without an assertion the write is refused. An expired assertion answers 419.
+* Writing (`activate`, `deactivate`, `activateForEveryone`, `forget`, `purge`) sends the complete flag set to the authorizer, with the assertion of the session as bearer, and stores the signed manifest it returns. Without an assertion the write is refused. An expired assertion answers with the same `expired_status` as a Livewire request, 419 by default.
 * Flags are global. A write for any other scope is refused.
 * A flag that must not be off by accident should not default to `true` if it protects something licensed: the defaults are reachable by whoever owns the database.
 

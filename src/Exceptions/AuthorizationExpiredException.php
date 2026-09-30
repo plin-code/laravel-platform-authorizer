@@ -6,13 +6,13 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 
 /**
  * The authorizer refused a write because the assertion behind it has expired.
- * It renders as a 419, which makes Livewire reload the page, and the reload
- * goes through the authorizer again.
+ * It renders with the configured status, 419 by default, which makes
+ * Livewire reload the page, and the reload goes through the authorizer again.
  */
 class AuthorizationExpiredException extends HttpException
 {
-    public function __construct()
+    public function __construct(int $status = 419)
     {
-        parent::__construct(419, 'The platform authorization has expired.');
+        parent::__construct($status, 'The platform authorization has expired.');
     }
 }

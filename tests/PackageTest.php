@@ -19,6 +19,10 @@ it('registers the routes of the round trip and the synchronisation command', fun
         ->and(Artisan::all())->toHaveKey('platform-authorizer:sync-flags');
 });
 
+it('ships a configuration that answers an expired authorization with 419', function () {
+    expect((require __DIR__.'/../config/platform-authorizer.php')['expired_status'])->toBe(419);
+});
+
 it('ships a configuration that reads nothing from the environment but the installation slug', function () {
     $source = (string) file_get_contents(__DIR__.'/../config/platform-authorizer.php');
 

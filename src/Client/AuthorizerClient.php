@@ -82,7 +82,7 @@ final class AuthorizerClient
             ]), 'flags.write');
 
         if ($response->status() === 401 && $response->json('error') === 'expired') {
-            throw new AuthorizationExpiredException;
+            throw new AuthorizationExpiredException($this->settings->expiredStatus);
         }
 
         if ($response->status() === 401 || $response->status() === 403) {

@@ -3,6 +3,7 @@
 namespace PlinCode\PlatformAuthorizer\Http;
 
 use Livewire\Component;
+use PlinCode\PlatformAuthorizer\PlatformAuthorization;
 
 /**
  * Refuses to hydrate a protected Livewire component without a valid
@@ -28,7 +29,7 @@ final class ProtectedComponentGuard
 
         match (app(AccessDecider::class)->decide(livewireUpdate: true)) {
             AccessDecision::Allow => null,
-            AccessDecision::Expired => abort(419),
+            AccessDecision::Expired => abort(app(PlatformAuthorization::class)->settings()->expiredStatus),
             AccessDecision::Authorize, AccessDecision::Forbidden => abort(403),
         };
     }

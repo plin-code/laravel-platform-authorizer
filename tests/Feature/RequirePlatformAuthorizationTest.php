@@ -67,6 +67,12 @@ it('lets the excepted routes through without any authorization', function () {
     $this->actingAs($this->user)->post('/probe/logout')->assertOk()->assertSee('logged out');
 });
 
+it('refuses when the expired status is not one of the two allowed', function () {
+    config()->set('platform-authorizer.expired_status', 500);
+
+    $this->actingAs($this->user)->withSession(session_with())->get('/probe')->assertForbidden();
+});
+
 it('refuses when the configuration cannot be used', function () {
     config()->set('platform-authorizer.keys', []);
 

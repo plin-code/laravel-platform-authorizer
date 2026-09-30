@@ -11,6 +11,8 @@ use PlinCode\PlatformAuthorizer\Exceptions\InvalidConfigurationException;
  */
 final readonly class Settings
 {
+    private const int DEFAULT_EXPIRED_STATUS = 419;
+
     /**
      * @param  array<non-empty-string, string>  $keys  key id => base64 public key
      * @param  list<non-empty-string>  $protectedLivewireNamespaces
@@ -23,6 +25,7 @@ final readonly class Settings
         public array $keys,
         public int $timeout,
         public int $livewireGraceSeconds,
+        public int $expiredStatus,
         public array $protectedLivewireNamespaces,
         public array $exceptRoutes,
         public string $globalScope,
@@ -43,6 +46,7 @@ final readonly class Settings
             keys: self::keys($config['keys'] ?? null),
             timeout: self::integer('timeout', $config['timeout'] ?? null, 1, 10),
             livewireGraceSeconds: self::integer('livewire_grace_seconds', $config['livewire_grace_seconds'] ?? null, 0, 3600),
+            expiredStatus: self::expiredStatus($config['expired_status'] ?? self::DEFAULT_EXPIRED_STATUS),
             protectedLivewireNamespaces: self::strings('protected_livewire_namespaces', $config['protected_livewire_namespaces'] ?? []),
             exceptRoutes: self::strings('except_routes', $config['except_routes'] ?? []),
             globalScope: self::nonEmpty('global_scope', $config['global_scope'] ?? null),
@@ -111,6 +115,19 @@ final readonly class Settings
     {
         if (! is_int($value) || $value < $min || $value > $max) {
             throw InvalidConfigurationException::for($setting, "an integer between {$min} and {$max} is required");
+        }
+
+        return $value;
+    }
+
+    /**
+     * 419 makes Livewire reload the page, 403 shows its error modal. Nothing
+     * else is a meaningful answer to an expired authorization.
+     */
+    private static function expiredStatus(mixed $value): int
+    {
+        if ($value !== 403 && $value !== 419) {
+            throw InvalidConfigurationException::for('expired_status', 'the integer 403 or 419 is required');
         }
 
         return $value;

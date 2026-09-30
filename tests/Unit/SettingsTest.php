@@ -103,6 +103,54 @@ it('rejects every malformed setting', function (array $overrides, string $settin
     'denied url empty' => [['denied_url' => ''], 'denied_url'],
 ]);
 
+it('answers an expired authorization with 419 unless told otherwise', function (array $overrides) {
+    expect(Settings::fromConfig(validConfig($overrides))->expiredStatus)->toBe(419);
+})->with([
+    'not configured' => [[]],
+    'null' => [['expired_status' => null]],
+    'explicit' => [['expired_status' => 419]],
+]);
+
+it('accepts 403 as the status of an expired authorization', function () {
+    expect(Settings::fromConfig(validConfig(['expired_status' => 403]))->expiredStatus)->toBe(403);
+});
+
+it('refuses any other status for an expired authorization, naming the setting and not the value', function (mixed $status) {
+    try {
+        Settings::fromConfig(validConfig(['expired_status' => $status]));
+    } catch (InvalidConfigurationException $exception) {
+        expect($exception->setting)->toBe('expired_status')
+            ->and($exception->getMessage())->toContain('expired_status');
+
+        return;
+    }
+
+    $this->fail('The configuration should have been refused.');
+})->with([
+    'unauthorized' => [401],
+    'server error' => [500],
+    'a status next to 419' => [418],
+    'zero' => [0],
+    'negative' => [-419],
+    'a numeric string' => ['419'],
+    'a string' => ['leak-me-please'],
+    'a float' => [419.0],
+    'a boolean' => [true],
+    'an array' => [[419]],
+]);
+
+it('never echoes the refused status in the error message', function (int|string $status) {
+    try {
+        Settings::fromConfig(validConfig(['expired_status' => $status]));
+    } catch (InvalidConfigurationException $exception) {
+        expect($exception->getMessage())->not->toContain((string) $status);
+
+        return;
+    }
+
+    $this->fail('The configuration should have been refused.');
+})->with([401, 500, 418, 'leak-me-please']);
+
 it('never echoes a key in the error message', function () {
     try {
         Settings::fromConfig(validConfig(['keys' => ['key-1' => 'not-a-real-key-value']]));

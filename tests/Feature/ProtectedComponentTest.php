@@ -83,6 +83,12 @@ it('follows the same rules as the middleware for a forged snapshot', function (i
     'past the grace' => [901, 419],
 ]);
 
+it('answers a forged snapshot 403 past the grace when the expired status is 403', function () {
+    config()->set('platform-authorizer.expired_status', 403);
+
+    updateWith(forgedSnapshot('probe-panel'), assertionExpiredAgo(901))->assertForbidden();
+});
+
 it('leaves a component outside the protected namespaces alone', function () {
     updateWith(forgedSnapshot('other-panel'), [])->assertOk();
 });

@@ -46,7 +46,7 @@ final class RequirePlatformAuthorization
             AccessDecision::Allow => $next($request),
             AccessDecision::Authorize => redirect()->guest(route('platform-authorizer.redirect')),
             AccessDecision::Forbidden => abort(403),
-            AccessDecision::Expired => abort(419),
+            AccessDecision::Expired => abort($this->authorization->settings()->expiredStatus),
         };
     }
 }
