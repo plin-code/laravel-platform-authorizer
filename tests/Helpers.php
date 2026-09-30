@@ -50,3 +50,21 @@ function assertionClaims(array $overrides = []): array
         ...$overrides,
     ];
 }
+
+/**
+ * The claims of a valid manifest for the settings above.
+ *
+ * @param  array<string, mixed>  $overrides
+ * @return array<string, mixed>
+ */
+function manifestClaims(array $overrides = []): array
+{
+    return [
+        'aud' => 'mizuno-acme',
+        'prd' => 'mizuno-run-club',
+        'ver' => 4,
+        'iat' => 1_790_000_000,
+        'flags' => ['check-in' => true, 'custom-fields.management' => false],
+        ...$overrides,
+    ];
+}
