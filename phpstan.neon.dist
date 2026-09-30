@@ -2,5 +2,6 @@ parameters:
     level: 8
     paths:
         - src
+        - database
     tmpDir: build/phpstan
     checkOctaneCompatibility: true

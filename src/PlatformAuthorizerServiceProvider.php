@@ -11,7 +11,8 @@ class PlatformAuthorizerServiceProvider extends PackageServiceProvider
     {
         $package
             ->name('laravel-platform-authorizer')
-            ->hasConfigFile('platform-authorizer');
+            ->hasConfigFile('platform-authorizer')
+            ->hasMigration('create_feature_manifests_table');
     }
 
     public function packageRegistered(): void

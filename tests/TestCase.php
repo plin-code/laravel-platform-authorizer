@@ -18,4 +18,9 @@ class TestCase extends Orchestra
     {
         config()->set('database.default', 'testing');
     }
+
+    protected function defineDatabaseMigrations(): void
+    {
+        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
+    }
 }
