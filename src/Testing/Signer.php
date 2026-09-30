@@ -38,6 +38,9 @@ final class Signer
     }
 
     /**
+     * An empty `flags` claim is signed as `{}`, never as a list, as the
+     * authorizer does. Use signRaw() to build a token with a list there.
+     *
      * @param  array<string, mixed>  $claims
      */
     public function sign(array $claims, ?string $keyId = null): string

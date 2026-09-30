@@ -63,6 +63,51 @@ it('sets flags without an authorization, so a test can start from a known state'
         ->and($this->fake->version())->toBe(2);
 });
 
+it('signs an empty flag set as an object when a write empties it', function () {
+    $this->fake->setFlags(['check-in' => true]);
+    $this->fake->grant();
+
+    Feature::purge();
+
+    expect($this->fake->flags())->toBe([])
+        ->and($this->fake->version())->toBe(2)
+        ->and($this->fake->writes())->toBe(1)
+        ->and(app(ManifestRepository::class)->current()?->version)->toBe(2)
+        ->and(Feature::for('__global__')->active('check-in'))->toBeFalse();
+});
+
+it('round trips flags named with digits through a write', function () {
+    $this->fake->grant();
+
+    Feature::for('__global__')->activate('0');
+
+    expect($this->fake->flags())->toBe(['0' => true])
+        ->and(Feature::for('__global__')->active('0'))->toBeTrue();
+
+    Feature::for('__global__')->activate('1');
+    Feature::for('__global__')->deactivate('2');
+
+    expect($this->fake->flags())->toBe(['0' => true, '1' => true, '2' => false])
+        ->and(app(ManifestRepository::class)->current()?->flags)->toBe(['0' => true, '1' => true, '2' => false])
+        ->and(Feature::for('__global__')->active('2'))->toBeFalse();
+});
+
+it('sets flags named with digits', function () {
+    $this->fake->setFlags(['0' => true, '1' => false]);
+
+    expect($this->fake->flags())->toBe(['0' => true, '1' => false])
+        ->and(Feature::for('__global__')->active('0'))->toBeTrue()
+        ->and(Feature::for('__global__')->active('1'))->toBeFalse();
+});
+
+it('fails loudly when the manifest it builds is refused, and keeps its state', function () {
+    app(ManifestRepository::class)->store($this->fake->signer()->sign(manifestClaims(['ver' => 50])));
+
+    expect(fn () => $this->fake->setFlags(['check-in' => true]))->toThrow(LogicException::class, 'refused')
+        ->and($this->fake->version())->toBe(0)
+        ->and($this->fake->flags())->toBe([]);
+});
+
 it('answers flag writes like the authorizer, one version per change', function () {
     $this->fake->grant();
 

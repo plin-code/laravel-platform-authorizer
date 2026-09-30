@@ -14,8 +14,10 @@ use PlinCode\PlatformAuthorizer\Jws\CompactJws;
 use PlinCode\PlatformAuthorizer\Manifests\Manifest;
 use PlinCode\PlatformAuthorizer\Manifests\ManifestCache;
 use PlinCode\PlatformAuthorizer\Manifests\ManifestRepository;
+use PlinCode\PlatformAuthorizer\Manifests\StoreOutcome;
 use PlinCode\PlatformAuthorizer\PlatformAuthorization;
 use PlinCode\PlatformAuthorizer\Settings;
+use stdClass;
 
 /**
  * Stands in for the vendor's authorizer in the tests of an application.
@@ -108,19 +110,30 @@ final class FakeAuthorizer
      * Replaces the flags as if the authorizer had signed them, without
      * needing an authorization. Meant to put a test in a known state.
      *
-     * @param  array<string, bool>  $flags
+     * @param  array<array-key, bool>  $flags
+     *
+     * @throws LogicException when the manifest built for the flags is refused
      */
     public function setFlags(array $flags): void
     {
-        $this->latest = $this->issue($flags);
+        $previousVersion = $this->version;
+        $token = $this->issue($flags);
 
-        app(ManifestRepository::class)->store($this->latest);
+        $outcome = app(ManifestRepository::class)->store($token);
+
+        if ($outcome !== StoreOutcome::Stored) {
+            $this->version = $previousVersion;
+
+            throw new LogicException("The fake authorizer built a manifest the repository refused ({$outcome->value}), so the flags were not set.");
+        }
+
+        $this->latest = $token;
 
         $this->refresh();
     }
 
     /**
-     * @return array<string, bool>
+     * @return array<array-key, bool>
      */
     public function flags(): array
     {
@@ -190,16 +203,18 @@ final class FakeAuthorizer
     }
 
     /**
-     * @param  array<string, bool>  $flags
+     * The flags are always signed as a JSON object, whatever their names.
+     *
+     * @param  array<array-key, bool>|stdClass  $flags
      */
-    private function issue(array $flags): string
+    private function issue(array|stdClass $flags): string
     {
         return $this->signer->sign([
             'aud' => config('platform-authorizer.installation'),
             'prd' => config('platform-authorizer.product'),
             'ver' => ++$this->version,
             'iat' => now()->getTimestamp(),
-            'flags' => $flags,
+            'flags' => (object) $flags,
         ]);
     }
 
