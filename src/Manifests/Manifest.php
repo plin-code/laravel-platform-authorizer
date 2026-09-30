@@ -2,6 +2,8 @@
 
 namespace PlinCode\PlatformAuthorizer\Manifests;
 
+use stdClass;
+
 /**
  * The set of feature flags the authorizer signed for one installation.
  */
@@ -20,6 +22,8 @@ final readonly class Manifest
 
     /**
      * Null unless every field is present with exactly the expected type.
+     * The flags must be a JSON object (as decoded by CompactJws, so a list
+     * is refused), with a boolean for every name.
      *
      * @param  array<array-key, mixed>  $payload
      */
@@ -35,14 +39,17 @@ final readonly class Manifest
             || ! is_string($product) || $product === ''
             || ! is_int($version) || $version < 1
             || ! is_int($issuedAt)
-            || ! is_array($flags)) {
+            || ! $flags instanceof stdClass) {
             return null;
         }
 
         $checked = [];
 
-        foreach ($flags as $name => $value) {
-            if (! is_string($name) || $name === '' || ! is_bool($value)) {
+        foreach (get_object_vars($flags) as $name => $value) {
+            // PHP hands over a name made of digits as an integer.
+            $name = (string) $name;
+
+            if ($name === '' || ! is_bool($value)) {
                 return null;
             }
 

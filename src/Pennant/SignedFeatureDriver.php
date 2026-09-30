@@ -100,7 +100,8 @@ final class SignedFeatureDriver implements Driver, HasFlushableCache
     {
         $current = $this->cache()->flags();
 
-        $this->replace(array_merge($current, $changes), $current);
+        // array_replace keeps names made of digits, which array_merge renumbers.
+        $this->replace(array_replace($current, $changes), $current);
     }
 
     /**

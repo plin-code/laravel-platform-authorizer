@@ -92,6 +92,7 @@ it('refuses a token that does not verify, and says why', function (Closure $buil
     'key id an array' => [fn (Signer $signer) => $signer->signRaw('{"alg":"EdDSA","kid":["test-key-1"]}', '{}'), JwsFailure::Malformed, null],
     'key id a float' => [fn (Signer $signer) => $signer->signRaw('{"alg":"EdDSA","kid":1.5}', '{}'), JwsFailure::Malformed, null],
     'key id an integer' => [fn (Signer $signer) => $signer->signRaw('{"alg":"EdDSA","kid":1}', '{}'), JwsFailure::Malformed, null],
+    'key id an object' => [fn (Signer $signer) => $signer->signRaw('{"alg":"EdDSA","kid":{"id":"test-key-1"}}', '{}'), JwsFailure::Malformed, null],
     'key id null' => [fn (Signer $signer) => $signer->signRaw('{"alg":"EdDSA","kid":null}', '{}'), JwsFailure::Malformed, null],
     'key id empty' => [fn (Signer $signer) => $signer->signRaw('{"alg":"EdDSA","kid":""}', '{}'), JwsFailure::Malformed, null],
     'unknown key id' => [fn (Signer $signer) => $signer->sign(['ver' => 1], 'gone-key'), JwsFailure::UnknownKid, 'gone-key'],
@@ -99,6 +100,8 @@ it('refuses a token that does not verify, and says why', function (Closure $buil
     'unknown key id that is too long' => [fn (Signer $signer) => $signer->sign(['ver' => 1], str_repeat('k', 101)), JwsFailure::UnknownKid, null],
     'payload not json' => [fn (Signer $signer) => $signer->signRaw('{"alg":"EdDSA","kid":"test-key-1"}', 'nope'), JwsFailure::Malformed, 'test-key-1'],
     'payload a json scalar' => [fn (Signer $signer) => $signer->signRaw('{"alg":"EdDSA","kid":"test-key-1"}', '42'), JwsFailure::Malformed, 'test-key-1'],
+    'header nested deeper than the limit' => [fn (Signer $signer) => $signer->signRaw('{"alg":"EdDSA","kid":"test-key-1","x":'.str_repeat('[', 8).str_repeat(']', 8).'}', '{}'), JwsFailure::Malformed, null],
+    'payload nested deeper than the limit' => [fn (Signer $signer) => $signer->signRaw('{"alg":"EdDSA","kid":"test-key-1"}', '{"x":'.str_repeat('[', 8).str_repeat(']', 8).'}'), JwsFailure::Malformed, 'test-key-1'],
     'payload a json list' => [fn (Signer $signer) => $signer->signRaw('{"alg":"EdDSA","kid":"test-key-1"}', '[1,2]'), JwsFailure::Malformed, 'test-key-1'],
 ]);
 
@@ -116,3 +119,31 @@ it('treats a configured public key that is not usable as an unknown key', functi
     'empty' => [''],
     'not a string' => [['x']],
 ]);
+
+it('keeps an empty json object apart from an empty json list inside the payload', function () {
+    $signer = new Signer;
+    $keys = [$signer->keyId() => $signer->publicKey()];
+    $header = '{"alg":"EdDSA","kid":"test-key-1"}';
+
+    $object = CompactJws::verify($signer->signRaw($header, '{"flags":{}}'), $keys)->payload;
+    $list = CompactJws::verify($signer->signRaw($header, '{"flags":[]}'), $keys)->payload;
+
+    expect($object['flags'])->toBeInstanceOf(stdClass::class)
+        ->and($list['flags'])->toBe([]);
+});
+
+it('keeps a numeric member name of a nested object readable', function () {
+    $signer = new Signer;
+    $payload = CompactJws::verify(
+        $signer->signRaw('{"alg":"EdDSA","kid":"test-key-1"}', '{"flags":{"123":true}}'),
+        [$signer->keyId() => $signer->publicKey()],
+    )->payload;
+
+    expect($payload['flags']->{'123'})->toBeTrue();
+});
+
+it('accepts an empty json object as a payload', function () {
+    $signer = new Signer;
+
+    expect(CompactJws::verify($signer->signRaw('{"alg":"EdDSA","kid":"test-key-1"}', '{}'), [$signer->keyId() => $signer->publicKey()])->payload)->toBe([]);
+});

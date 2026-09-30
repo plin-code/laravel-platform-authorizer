@@ -26,6 +26,55 @@ it('accepts a manifest without flags', function () {
     expect($manifest?->flags)->toBe([]);
 });
 
+/** A genuinely signed manifest whose flags are the given raw json. */
+function manifestWithRawFlags(Signer $signer, string $flags): string
+{
+    $claims = json_encode(array_diff_key(manifestClaims(), ['flags' => true]), JSON_THROW_ON_ERROR);
+
+    return $signer->signRaw('{"alg":"EdDSA","kid":"test-key-1"}', substr($claims, 0, -1).',"flags":'.$flags.'}');
+}
+
+it('accepts flags that are an empty json object', function () {
+    expect($this->verifier->verify(manifestWithRawFlags($this->signer, '{}'))?->flags)->toBe([]);
+});
+
+it('refuses flags that are a json list, empty or not', function (string $flags) {
+    Event::fake([AssertionRejected::class]);
+
+    expect($this->verifier->verify(manifestWithRawFlags($this->signer, $flags)))->toBeNull();
+
+    Event::assertDispatched(AssertionRejected::class, fn (AssertionRejected $event): bool => $event->reason === 'malformed');
+})->with([
+    'empty list' => ['[]'],
+    'list of booleans' => ['[true]'],
+    'list of objects' => ['[{"check-in":true}]'],
+]);
+
+it('refuses flags that are not a flat object of booleans', function (string $flags) {
+    expect($this->verifier->verify(manifestWithRawFlags($this->signer, $flags)))->toBeNull();
+})->with([
+    'a nested object' => ['{"check-in":{"enabled":true}}'],
+    'a nested empty object' => ['{"check-in":{}}'],
+    'a nested empty list' => ['{"check-in":[]}'],
+    'an empty name' => ['{"":true}'],
+    'a string' => ['"all"'],
+    'a number' => ['1'],
+    'null' => ['null'],
+]);
+
+it('keeps a flag named with digits as a flag name', function () {
+    $manifest = $this->verifier->verify(manifestWithRawFlags($this->signer, '{"123":true,"0":false,"check-in":true}'));
+
+    expect($manifest)->not->toBeNull()
+        ->and($manifest->flags)->toBe(['123' => true, '0' => false, 'check-in' => true])
+        ->and(array_key_exists('123', $manifest->flags))->toBeTrue()
+        ->and($manifest->flags['123'])->toBeTrue();
+});
+
+it('refuses a flag named with digits whose value is not a boolean', function () {
+    expect($this->verifier->verify(manifestWithRawFlags($this->signer, '{"123":1}')))->toBeNull();
+});
+
 it('refuses a manifest issued for another installation or product', function (array $claims) {
     expect($this->verifier->verify($this->signer->sign(manifestClaims($claims))))->toBeNull();
 })->with([

@@ -32,6 +32,22 @@ it('stores a genuine manifest and reads it back', function () {
         ->and($this->repository->current()?->flags)->toBe(['check-in' => true, 'custom-fields.management' => false]);
 });
 
+it('stores and reads back a manifest with a flag named with digits', function () {
+    $claims = json_encode(array_diff_key(manifestClaims(['ver' => 3]), ['flags' => true]), JSON_THROW_ON_ERROR);
+    $token = $this->signer->signRaw('{"alg":"EdDSA","kid":"test-key-1"}', substr($claims, 0, -1).',"flags":{"123":true,"check-in":false}}');
+
+    expect($this->repository->store($token))->toBe(StoreOutcome::Stored)
+        ->and($this->repository->current()?->flags)->toBe(['123' => true, 'check-in' => false]);
+});
+
+it('refuses to store a manifest whose flags are a json list', function () {
+    $claims = json_encode(array_diff_key(manifestClaims(['ver' => 3]), ['flags' => true]), JSON_THROW_ON_ERROR);
+    $token = $this->signer->signRaw('{"alg":"EdDSA","kid":"test-key-1"}', substr($claims, 0, -1).',"flags":[]}');
+
+    expect($this->repository->store($token))->toBe(StoreOutcome::Invalid)
+        ->and($this->repository->current())->toBeNull();
+});
+
 it('keeps a single row per installation', function () {
     $this->repository->store($this->signer->sign(manifestClaims(['ver' => 1])));
     $this->repository->store($this->signer->sign(manifestClaims(['ver' => 2])));

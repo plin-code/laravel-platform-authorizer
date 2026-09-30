@@ -11,6 +11,7 @@ use LogicException;
 use PlinCode\PlatformAuthorizer\Assertions\Assertion;
 use PlinCode\PlatformAuthorizer\Assertions\AssertionVerifier;
 use PlinCode\PlatformAuthorizer\Jws\CompactJws;
+use PlinCode\PlatformAuthorizer\Manifests\Manifest;
 use PlinCode\PlatformAuthorizer\Manifests\ManifestCache;
 use PlinCode\PlatformAuthorizer\Manifests\ManifestRepository;
 use PlinCode\PlatformAuthorizer\PlatformAuthorization;
@@ -125,7 +126,7 @@ final class FakeAuthorizer
     {
         $payload = $this->latest === null ? null : CompactJws::verify($this->latest, [$this->signer->keyId() => $this->signer->publicKey()])->payload;
 
-        return is_array($payload) && is_array($payload['flags'] ?? null) ? $payload['flags'] : [];
+        return $payload === null ? [] : Manifest::fromPayload($payload)->flags ?? [];
     }
 
     /** The version of the latest manifest the authorizer issued, 0 when none. */

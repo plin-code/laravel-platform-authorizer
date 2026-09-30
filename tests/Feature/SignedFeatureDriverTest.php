@@ -70,6 +70,15 @@ it('answers from the signed manifest', function () {
         ->and(Feature::for('__global__')->active('kill-switch'))->toBeFalse();
 });
 
+it('resolves a flag named with digits from the signed manifest', function () {
+    $claims = json_encode(array_diff_key(manifestClaims(), ['flags' => true]), JSON_THROW_ON_ERROR);
+    putManifest($this->signer->signRaw('{"alg":"EdDSA","kid":"test-key-1"}', substr($claims, 0, -1).',"flags":{"123":true,"check-in":true}}'));
+
+    expect(Feature::for('__global__')->active('123'))->toBeTrue()
+        ->and(Feature::for('__global__')->active('check-in'))->toBeTrue()
+        ->and(Feature::for('__global__')->active('456'))->toBeFalse();
+});
+
 it('gives every scope the global value of the manifest', function () {
     putManifest($this->signer->sign(manifestClaims(['flags' => ['check-in' => true]])));
 
@@ -207,6 +216,33 @@ it('keeps the other flags when one changes', function () {
 
     Http::assertSent(fn (Request $request): bool => $request->data()['flags'] === ['check-in' => true, 'kill-switch' => false]);
     expect(app(ManifestRepository::class)->current()?->flags)->toBe(['check-in' => true, 'kill-switch' => false]);
+});
+
+it('keeps flags named with digits when others change or are forgotten', function () {
+    grantSession();
+    authorizerSigns($this->signer);
+
+    Feature::for('__global__')->activate('123');
+    Feature::for('__global__')->activate('456');
+    Feature::for('__global__')->deactivate('check-in');
+
+    expect(app(ManifestRepository::class)->current()?->flags)->toBe(['123' => true, '456' => true, 'check-in' => false]);
+
+    Feature::purge('123');
+
+    expect(app(ManifestRepository::class)->current()?->flags)->toBe(['456' => true, 'check-in' => false])
+        ->and(Feature::for('__global__')->active('456'))->toBeTrue();
+});
+
+it('sends flags named only with sequential digits as an object', function () {
+    grantSession();
+    authorizerSigns($this->signer);
+
+    Feature::for('__global__')->activate('0');
+    Feature::for('__global__')->activate('1');
+
+    Http::assertSent(fn (Request $request): bool => str_contains($request->body(), '"flags":{"0":true,"1":true}'));
+    expect(app(ManifestRepository::class)->current()?->flags)->toBe(['0' => true, '1' => true]);
 });
 
 it('turns a flag off through the authorizer', function () {

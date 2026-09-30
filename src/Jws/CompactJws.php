@@ -3,6 +3,7 @@
 namespace PlinCode\PlatformAuthorizer\Jws;
 
 use JsonException;
+use stdClass;
 
 /**
  * Verifies compact JWS tokens signed with Ed25519 (alg EdDSA, the only
@@ -95,6 +96,11 @@ final class CompactJws
     }
 
     /**
+     * The members of a JSON object. Objects are decoded as objects and only
+     * the top level becomes an array, so a nested `{}` stays apart from a
+     * nested `[]` and a member name made of digits keeps its meaning as a
+     * name. A top level that is not an object is refused.
+     *
      * @return array<array-key, mixed>|null
      */
     private static function json(string $segment): ?array
@@ -106,15 +112,11 @@ final class CompactJws
         }
 
         try {
-            $decoded = json_decode($bytes, true, 8, JSON_THROW_ON_ERROR);
+            $decoded = json_decode($bytes, false, 8, JSON_THROW_ON_ERROR);
         } catch (JsonException) {
             return null;
         }
 
-        if (! is_array($decoded) || ($decoded !== [] && array_is_list($decoded))) {
-            return null;
-        }
-
-        return $decoded;
+        return $decoded instanceof stdClass ? (array) $decoded : null;
     }
 }

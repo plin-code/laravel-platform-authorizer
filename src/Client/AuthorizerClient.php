@@ -63,7 +63,7 @@ final class AuthorizerClient
      * Asks the authorizer to sign a new flag set, presenting the assertion of
      * the current session as bearer, and returns the new manifest token.
      *
-     * @param  array<string, bool>  $flags
+     * @param  array<array-key, bool>  $flags  PHP turns a name made of digits into an integer key
      *
      * @throws AuthorizationExpiredException
      * @throws AuthorizationRejectedException
@@ -75,9 +75,10 @@ final class AuthorizerClient
             ->withToken($assertion)
             ->post('/v1/flags', [
                 'installation' => $this->settings->installation,
-                // An empty PHP array would be sent as a list, which the
-                // authorizer refuses: the flag set is a JSON object.
-                'flags' => $flags === [] ? new \stdClass : $flags,
+                // A PHP array that is empty or has the names 0, 1, 2... would be
+                // sent as a list, which the authorizer refuses: the flag set
+                // is a JSON object.
+                'flags' => array_is_list($flags) ? (object) $flags : $flags,
             ]), 'flags.write');
 
         if ($response->status() === 401 && $response->json('error') === 'expired') {
