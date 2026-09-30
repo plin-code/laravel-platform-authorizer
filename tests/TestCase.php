@@ -4,6 +4,7 @@ namespace PlinCode\PlatformAuthorizer\Tests;
 
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Route;
+use Laravel\Pennant\PennantServiceProvider;
 use Livewire\Livewire;
 use Livewire\LivewireServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
@@ -26,6 +27,7 @@ class TestCase extends Orchestra
     {
         return [
             LivewireServiceProvider::class,
+            PennantServiceProvider::class,
             PlatformAuthorizerServiceProvider::class,
         ];
     }
@@ -34,6 +36,10 @@ class TestCase extends Orchestra
     {
         config()->set('database.default', 'testing');
         config()->set('session.driver', 'array');
+        // Flags are read and written through the package driver, never through
+        // Pennant's own database store.
+        config()->set('pennant.default', 'platform-authorizer');
+        config()->set('pennant.stores', ['platform-authorizer' => ['driver' => 'platform-authorizer']]);
         // The web middleware group encrypts cookies, which needs a key.
         config()->set('app.key', 'base64:'.base64_encode(str_repeat('k', 32)));
     }
