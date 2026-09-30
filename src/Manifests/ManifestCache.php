@@ -21,7 +21,7 @@ final class ManifestCache
     /**
      * The flags of the manifest, or none when there is no trustworthy one.
      *
-     * @return array<string, bool>
+     * @return array<array-key, bool>
      */
     public function flags(): array
     {

@@ -10,7 +10,7 @@ use stdClass;
 final readonly class Manifest
 {
     /**
-     * @param  array<string, bool>  $flags
+     * @param  array<array-key, bool>  $flags
      */
     public function __construct(
         public string $installation,

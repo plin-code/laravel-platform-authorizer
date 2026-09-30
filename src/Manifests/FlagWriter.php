@@ -25,7 +25,7 @@ final class FlagWriter
     /**
      * Replaces the whole flag set.
      *
-     * @param  array<string, bool>  $flags
+     * @param  array<array-key, bool>  $flags
      *
      * @throws AuthorizationExpiredException when the assertion of the session has expired
      * @throws AuthorizationRejectedException when there is no assertion, or the authorizer refuses it

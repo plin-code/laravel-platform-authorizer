@@ -94,7 +94,7 @@ final class SignedFeatureDriver implements Driver, HasFlushableCache
     }
 
     /**
-     * @param  array<string, bool>  $changes
+     * @param  array<array-key, bool>  $changes
      */
     private function change(array $changes): void
     {
@@ -119,8 +119,8 @@ final class SignedFeatureDriver implements Driver, HasFlushableCache
      * every write is a call to the authorizer, so an unchanged set stops
      * here.
      *
-     * @param  array<string, bool>  $flags
-     * @param  array<string, bool>|null  $current
+     * @param  array<array-key, bool>  $flags
+     * @param  array<array-key, bool>|null  $current
      */
     private function replace(array $flags, ?array $current = null): void
     {
