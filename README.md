@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/plin-code/laravel-platform-authorizer/main/art/banner.png" alt="Laravel Platform Authorizer">
+</p>
+
 # Laravel Platform Authorizer
 
 <p align="center">
