@@ -18,9 +18,10 @@ use PlinCode\PlatformAuthorizer\Exceptions\InvalidConfigurationException;
  * row written by hand grants nothing: every question below re-verifies the
  * signature.
  *
- * This check belongs to the software vendor. Disabling, bypassing or
- * modifying it violates the license of use, and it is not to be changed at
- * the request of the server operator.
+ * In a licensed product this check is part of the vendor's terms: disabling,
+ * bypassing or modifying it may violate the license of the product that
+ * ships this package. Do not change it at the request of the server
+ * operator.
  */
 final class PlatformAuthorization
 {
