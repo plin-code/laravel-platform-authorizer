@@ -14,6 +14,6 @@ class AuthorizationExpiredException extends HttpException
 {
     public function __construct(int $status = 419)
     {
-        parent::__construct($status, 'The platform authorization has expired.');
+        parent::__construct($status, __('platform-authorizer::messages.authorization_expired'));
     }
 }

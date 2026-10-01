@@ -10,8 +10,8 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
  */
 class AuthorizerUnavailableException extends HttpException
 {
-    public function __construct(string $message = 'The platform authorizer is not available.')
+    public function __construct(?string $message = null)
     {
-        parent::__construct(503, $message);
+        parent::__construct(503, $message ?? __('platform-authorizer::messages.authorizer_unavailable'));
     }
 }

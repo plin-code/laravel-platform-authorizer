@@ -36,7 +36,7 @@ final class FlagWriter
         $assertion = $this->authorization->assertion();
 
         if ($assertion === null) {
-            throw new AuthorizationRejectedException('Changing feature flags needs a platform authorization.');
+            throw AuthorizationRejectedException::forFlagWrite();
         }
 
         $outcome = $this->repository->store($this->client->writeFlags($assertion, $flags));
