@@ -137,6 +137,15 @@ it('falls back to nothing once the key that signed a manifest is removed from th
         ->and($verifier->verify($new->sign(manifestClaims())))->not->toBeNull();
 });
 
+it('gives the reason of a refusal along with the verdict', function () {
+    $retired = new Signer('retired-seed', 'retired-key');
+
+    expect($this->verifier->check($retired->sign(manifestClaims()))->reason)->toBe('unknown_kid')
+        ->and($this->verifier->check($retired->sign(manifestClaims()))->manifest)->toBeNull()
+        ->and($this->verifier->check($this->signer->sign(manifestClaims()))->reason)->toBeNull()
+        ->and($this->verifier->check($this->signer->sign(manifestClaims()))->manifest?->version)->toBe(4);
+});
+
 it('announces every refusal with the reason and the declared key id only', function (Closure $build, string $reason, ?string $kid) {
     Event::fake([AssertionRejected::class]);
 

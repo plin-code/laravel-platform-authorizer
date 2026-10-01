@@ -22,6 +22,14 @@ final class ManifestVerifier
 
     public function verify(string $token): ?Manifest
     {
+        return $this->check($token)->manifest;
+    }
+
+    /**
+     * Like verify, with the reason of a refusal.
+     */
+    public function check(string $token): ManifestVerification
+    {
         $jws = CompactJws::verify($token, $this->settings->keys);
 
         if ($jws->failure !== null) {
@@ -42,13 +50,13 @@ final class ManifestVerifier
             return $this->reject('wrong_product', $jws->kid);
         }
 
-        return $manifest;
+        return ManifestVerification::valid($manifest);
     }
 
-    private function reject(string $reason, ?string $kid): null
+    private function reject(string $reason, ?string $kid): ManifestVerification
     {
         event(new AssertionRejected(AssertionRejected::MANIFEST, $reason, $kid));
 
-        return null;
+        return ManifestVerification::refused($reason);
     }
 }

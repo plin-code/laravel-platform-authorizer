@@ -194,6 +194,20 @@ it('reads the manifest once per request, however many flags are asked for', func
     expect($reads)->toHaveCount(1);
 });
 
+it('reports a missing manifest once per request, however many flags are asked for', function () {
+    Feature::flushCache();
+    $logged = [];
+    Event::listen(MessageLogged::class, function (MessageLogged $event) use (&$logged): void {
+        $logged[] = $event->message;
+    });
+
+    Feature::for('__global__')->active('check-in');
+    Feature::for('__global__')->active('kill-switch');
+    Feature::for('x')->active('check-in');
+
+    expect($logged)->toBe(['Feature manifest missing, shipped defaults in use']);
+});
+
 it('turns a flag on through the authorizer, with a single call per toggle', function () {
     grantSession();
     authorizerSigns($this->signer);

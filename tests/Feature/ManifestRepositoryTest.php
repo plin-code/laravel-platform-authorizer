@@ -19,9 +19,45 @@ function storedToken(): ?string
     return DB::table('feature_manifests')->where('installation', 'mizuno-acme')->value('token');
 }
 
-it('has nothing to read before a manifest is stored', function () {
+it('has nothing to read before a manifest is stored, and says so', function () {
+    Log::spy();
+
     expect($this->repository->current())->toBeNull();
+
+    Log::shouldHaveReceived('warning')->once()->withArgs(
+        fn (string $message, array $context): bool => $message === 'Feature manifest missing, shipped defaults in use'
+            && $context === ['installation' => 'mizuno-acme', 'reason' => 'missing'],
+    );
 });
+
+it('does not report a missing manifest while it stores the first one', function () {
+    Log::spy();
+
+    expect($this->repository->store($this->signer->sign(manifestClaims())))->toBe(StoreOutcome::Stored);
+
+    Log::shouldNotHaveReceived('warning');
+});
+
+it('logs why a stored manifest is refused', function (Closure $token, string $reason) {
+    DB::table('feature_manifests')->insert([
+        'installation' => 'mizuno-acme',
+        'token' => $token($this->signer),
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+    Log::spy();
+
+    expect($this->repository->current())->toBeNull();
+
+    Log::shouldHaveReceived('warning')->once()->withArgs(
+        fn (string $message, array $context): bool => $message === 'Feature manifest refused, shipped defaults in use'
+            && $context === ['installation' => 'mizuno-acme', 'reason' => $reason],
+    );
+})->with([
+    'a key no longer configured' => [fn (Signer $signer) => (new Signer('retired-seed', 'retired-key'))->sign(manifestClaims()), 'unknown_kid'],
+    'not a token' => [fn (Signer $signer) => 'not-a-token', 'malformed'],
+    'another product' => [fn (Signer $signer) => $signer->sign(manifestClaims(['prd' => 'another-product'])), 'wrong_product'],
+]);
 
 it('stores a genuine manifest and reads it back', function () {
     $token = $this->signer->sign(manifestClaims(['ver' => 3]));
@@ -92,7 +128,7 @@ it('ignores a manifest row that was edited by hand', function () {
     expect($this->repository->current())->toBeNull();
 
     Log::shouldHaveReceived('warning')->once()->withArgs(
-        fn (string $message, array $context): bool => $context === ['installation' => 'mizuno-acme', 'reason' => 'invalid'],
+        fn (string $message, array $context): bool => $context === ['installation' => 'mizuno-acme', 'reason' => 'bad_signature'],
     );
 });
 

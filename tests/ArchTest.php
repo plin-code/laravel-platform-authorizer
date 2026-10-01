@@ -27,6 +27,7 @@ arch('value objects are immutable')
         'PlinCode\PlatformAuthorizer\Assertions\Assertion',
         'PlinCode\PlatformAuthorizer\Assertions\Verification',
         'PlinCode\PlatformAuthorizer\Manifests\Manifest',
+        'PlinCode\PlatformAuthorizer\Manifests\ManifestVerification',
         'PlinCode\PlatformAuthorizer\Jws\JwsResult',
         'PlinCode\PlatformAuthorizer\Events\AssertionRejected',
     ])

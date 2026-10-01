@@ -23,10 +23,19 @@ final class ManifestRepository
 
     /**
      * The stored manifest, or null when there is none, when it does not
-     * verify or when the table cannot be read. The log context carries the
-     * installation slug and a reason, nothing else.
+     * verify or when the table cannot be read. Each of these is logged, with
+     * the installation slug and a reason code and nothing else. The flags
+     * read it through the scoped ManifestCache, so a request logs it once.
      */
     public function current(): ?Manifest
+    {
+        return $this->read(warnWhenMissing: true);
+    }
+
+    /**
+     * @param  bool  $warnWhenMissing  false where no manifest yet is expected, like before the first store
+     */
+    private function read(bool $warnWhenMissing): ?Manifest
     {
         try {
             $token = DB::table(self::TABLE)->where('installation', $this->settings->installation)->value('token');
@@ -40,19 +49,26 @@ final class ManifestRepository
         }
 
         if (! is_string($token)) {
+            if ($warnWhenMissing) {
+                Log::warning('Feature manifest missing, shipped defaults in use', [
+                    'installation' => $this->settings->installation,
+                    'reason' => 'missing',
+                ]);
+            }
+
             return null;
         }
 
-        $manifest = $this->verifier->verify($token);
+        $verification = $this->verifier->check($token);
 
-        if ($manifest === null) {
+        if ($verification->manifest === null) {
             Log::warning('Feature manifest refused, shipped defaults in use', [
                 'installation' => $this->settings->installation,
-                'reason' => 'invalid',
+                'reason' => $verification->reason,
             ]);
         }
 
-        return $manifest;
+        return $verification->manifest;
     }
 
     /**
@@ -69,7 +85,7 @@ final class ManifestRepository
         }
 
         return DB::transaction(function () use ($token, $manifest): StoreOutcome {
-            $current = $this->current();
+            $current = $this->read(warnWhenMissing: false);
 
             if ($current !== null && $manifest->version < $current->version) {
                 return StoreOutcome::Older;
