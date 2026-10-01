@@ -12,4 +12,4 @@ All notable changes to `laravel-platform-authorizer` are documented here.
 * A missing manifest is logged as a warning (`Feature manifest missing, shipped defaults in use`, reason `missing`), at most once per request, like a refused one.
 * A refused manifest is logged with the specific reason (`unknown_kid`, `bad_signature`, `malformed`, `wrong_audience`, `wrong_product`) instead of `invalid`. `ManifestVerifier::check()` returns it along with the verdict.
 * Removed `AuthorizerClient::reportTamper()` and `FakeAuthorizer::events()`: the authorizer has no events endpoint. The `AssertionRejected` event stays.
-* The README is rewritten for a first time reader: what the vendor provides, a step by step setup, the protocol and a troubleshooting guide.
+* The README is rewritten for a first time reader and kept short: installation and a quick start, with the details (configuration, protecting routes, Livewire, feature flags, key rotation, customisation, protocol, troubleshooting and testing) in the `docs` folder.
