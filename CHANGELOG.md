@@ -2,14 +2,21 @@
 
 All notable changes to `laravel-platform-authorizer` are documented here.
 
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
 ## Unreleased
 
-* First version: assertion verification, protected routes and Livewire components, signed feature flags through Pennant, synchronisation command and testing helpers.
-* The authorizer client never follows a redirect. A 3xx answer is treated as an unavailable authorizer, so the assertion sent as bearer cannot travel to another host.
-* A manifest must carry its flags as a JSON object. An empty JSON list is no longer taken for an empty flag set, and flag names made of digits are accepted and survive a flag write.
-* New setting `expired_status` (403 or 419, 419 by default) for the status answered to an expired authorization, by the middleware, the Livewire component check and a flag write alike.
-* The messages of `AuthorizationRejectedException`, `AuthorizationExpiredException` and `AuthorizerUnavailableException`, which users see on the error page or in the Livewire modal, come from the translations (`platform-authorizer::messages`), in English and Italian. `AuthorizationRejectedException::forFlagWrite()` builds the refusal of a flag write without an authorization.
-* A missing manifest is logged as a warning (`Feature manifest missing, shipped defaults in use`, reason `missing`), at most once per request, like a refused one.
-* A refused manifest is logged with the specific reason (`unknown_kid`, `bad_signature`, `malformed`, `wrong_audience`, `wrong_product`) instead of `invalid`. `ManifestVerifier::check()` returns it along with the verdict.
-* Removed `AuthorizerClient::reportTamper()` and `FakeAuthorizer::events()`: the authorizer has no events endpoint. The `AssertionRejected` event stays.
-* The README is rewritten for a first time reader and kept short: installation and a quick start, with the details (configuration, protecting routes, Livewire, feature flags, key rotation, customisation, protocol, troubleshooting and testing) in the `docs` folder.
+## 0.1.0 - 2026-10-01
+
+First public release.
+
+### Added
+
+* Remote authorization of a vendor panel: a round trip through the vendor's authorizer ends with a signed assertion (Ed25519, one hour), verified on every request against installation, product and the logged in user.
+* `RequirePlatformAuthorization` middleware and `PlatformAuthorization` facade, with a refusal page in English and Italian.
+* Livewire support: 403 without authorization, a configurable grace period and `expired_status` (419 or 403) after expiry, protected component namespaces.
+* Signed feature flags through a Pennant driver: reads verify the stored manifest, writes go through the authorizer, `platform-authorizer:sync-flags` runs hourly.
+* Key rotation with several public keys in the configuration.
+* `AssertionRejected` event and log lines with the specific refusal reason, never with tokens or emails.
+* `FakeAuthorizer` for application tests.
