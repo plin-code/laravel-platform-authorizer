@@ -22,8 +22,6 @@ use PlinCode\PlatformAuthorizer\Settings;
  */
 final class AuthorizerClient
 {
-    private const int MAX_REASON_LENGTH = 200;
-
     public function __construct(private readonly Settings $settings) {}
 
     /**
@@ -92,26 +90,6 @@ final class AuthorizerClient
         }
 
         return $this->manifestFrom($response, 'flags.write');
-    }
-
-    /**
-     * Tells the authorizer about a tamper attempt. It never raises: reporting
-     * is best effort and must not get in the way of the request at hand.
-     */
-    public function reportTamper(string $reason): bool
-    {
-        try {
-            $response = $this->send(fn (PendingRequest $request): Response => $request->post('/v1/events', [
-                'installation' => $this->settings->installation,
-                'product' => $this->settings->product,
-                'type' => 'tamper',
-                'reason' => mb_substr($reason, 0, self::MAX_REASON_LENGTH),
-            ]), 'events');
-        } catch (AuthorizerUnavailableException) {
-            return false;
-        }
-
-        return $response->status() === 202;
     }
 
     private function manifestFrom(Response $response, string $endpoint): string

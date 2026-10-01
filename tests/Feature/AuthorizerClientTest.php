@@ -135,38 +135,6 @@ it('fails closed when the authorizer cannot be reached for a write', function ()
     expect(fn () => $this->client->writeFlags('secret-assertion-token', []))->toThrow(AuthorizerUnavailableException::class);
 });
 
-it('sends a tamper event and reports whether it was accepted', function () {
-    Http::fake(['*' => Http::response('', 202)]);
-
-    expect($this->client->reportTamper('enforce flag disabled'))->toBeTrue();
-
-    Http::assertSent(fn (Request $request): bool => $request->url() === 'https://auth.example.test/v1/events'
-        && $request->data() === [
-            'installation' => 'mizuno-acme',
-            'product' => 'mizuno-run-club',
-            'type' => 'tamper',
-            'reason' => 'enforce flag disabled',
-        ]);
-});
-
-it('cuts the reason of an event to 200 characters', function () {
-    Http::fake(['*' => Http::response('', 202)]);
-
-    $this->client->reportTamper(str_repeat('é', 300));
-
-    Http::assertSent(fn (Request $request): bool => mb_strlen($request->data()['reason']) === 200);
-});
-
-it('never raises when an event cannot be delivered', function (Closure $fake) {
-    $fake();
-
-    expect($this->client->reportTamper('x'))->toBeFalse();
-})->with([
-    'server error' => [fn () => Http::fake(['*' => Http::response('', 500)])],
-    'rate limited' => [fn () => Http::fake(['*' => Http::response('', 429)])],
-    'connection failure' => [fn () => Http::fake(['*' => fn () => throw new ConnectionException('timed out')])],
-]);
-
 /**
  * Fakes an authorizer that answers every call with a redirect to another
  * host, and that other host as a place that would accept anything.
@@ -198,14 +166,6 @@ it('does not follow a redirect when it reads the manifest', function () {
     fakeRedirectToAnotherHost();
 
     expect(fn () => $this->client->fetchManifest())->toThrow(AuthorizerUnavailableException::class);
-
-    assertNothingWentElsewhere();
-});
-
-it('does not follow a redirect when it reports a tamper event, and never raises', function () {
-    fakeRedirectToAnotherHost();
-
-    expect($this->client->reportTamper('x'))->toBeFalse();
 
     assertNothingWentElsewhere();
 });

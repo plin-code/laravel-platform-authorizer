@@ -3,7 +3,6 @@
 use Illuminate\Auth\GenericUser;
 use Illuminate\Support\Facades\DB;
 use Laravel\Pennant\Feature;
-use PlinCode\PlatformAuthorizer\Client\AuthorizerClient;
 use PlinCode\PlatformAuthorizer\Exceptions\AuthorizationExpiredException;
 use PlinCode\PlatformAuthorizer\Exceptions\AuthorizationRejectedException;
 use PlinCode\PlatformAuthorizer\Manifests\ManifestRepository;
@@ -141,10 +140,4 @@ it('serves the latest manifest to the synchronisation', function () {
 
 it('reports that no manifest exists before the first one is issued', function () {
     $this->artisan('platform-authorizer:sync-flags')->expectsOutputToContain('No manifest')->assertExitCode(0);
-});
-
-it('records the events an installation sends', function () {
-    app(AuthorizerClient::class)->reportTamper('a decoy key was used');
-
-    expect($this->fake->events())->toBe([['type' => 'tamper', 'reason' => 'a decoy key was used']]);
 });

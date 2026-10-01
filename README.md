@@ -123,8 +123,6 @@ A manifest already stored stays signed by the key that issued it. Removing the o
 
 `PlinCode\PlatformAuthorizer\Events\AssertionRejected` is dispatched whenever an assertion or a manifest is refused. It carries `subject` (`assertion` or `manifest`), `reason` (`malformed`, `unknown_kid`, `bad_signature`, `wrong_issuer`, `wrong_audience`, `wrong_product`, `wrong_nonce`, `email_mismatch` or `expired`) and `kid`, the key id the token declared when it is a short plain string. It never carries a token, an email or a claim.
 
-`PlinCode\PlatformAuthorizer\Client\AuthorizerClient::reportTamper(string $reason): bool` sends a report to the authorizer. It never throws.
-
 ## Testing your application
 
 `PlinCode\PlatformAuthorizer\Testing\FakeAuthorizer` replaces the authorizer in the tests of an application. It refuses to run anywhere but in a test run.
@@ -138,7 +136,7 @@ $authorizer->setFlags(['check-in' => true]); // a known flag state, no authoriza
 ```
 
 * `grant(?Authenticatable $user = null, array $claims = [], ?Signer $signer = null): string` puts an assertion in the session. Override claims or the signer to build one that must be refused.
-* `setFlags(array $flags): void`, `flags(): array`, `version(): int`, `writes(): int` and `events(): array` describe what the fake authorizer did.
+* `setFlags(array $flags): void`, `flags(): array`, `version(): int` and `writes(): int` describe what the fake authorizer did.
 * `signer(): Signer` gives access to the test key pair for anything else that needs a signed token.
 
 ## Limits

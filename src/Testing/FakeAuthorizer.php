@@ -37,9 +37,6 @@ final class FakeAuthorizer
 
     private int $writes = 0;
 
-    /** @var list<array{type: string, reason: string}> */
-    private array $events = [];
-
     private function __construct(private readonly Signer $signer) {}
 
     /**
@@ -154,14 +151,6 @@ final class FakeAuthorizer
         return $this->writes;
     }
 
-    /**
-     * @return list<array{type: string, reason: string}>
-     */
-    public function events(): array
-    {
-        return $this->events;
-    }
-
     private function answer(): void
     {
         $base = rtrim((string) config('platform-authorizer.url'), '/');
@@ -172,11 +161,6 @@ final class FakeAuthorizer
                 ? Http::response(['error' => 'not_found'], 404)
                 : Http::response(['manifest' => $this->latest]),
             $base.'/v1/flags' => fn (Request $request) => $this->write($request),
-            $base.'/v1/events' => function (Request $request) {
-                $this->events[] = ['type' => (string) $request['type'], 'reason' => (string) $request['reason']];
-
-                return Http::response('', 202);
-            },
         ]);
     }
 

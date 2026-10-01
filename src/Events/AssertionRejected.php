@@ -4,8 +4,8 @@ namespace PlinCode\PlatformAuthorizer\Events;
 
 /**
  * Dispatched whenever an assertion or a manifest is refused. An application
- * can listen to it, for instance to tell the vendor about an unexpected key
- * id. It carries a short reason code and the key id the token declared, and
+ * can listen to it, for instance to raise an alert on an unexpected key id.
+ * It carries a short reason code and the key id the token declared, and
  * never the token, an email or a claim.
  */
 final readonly class AssertionRejected
